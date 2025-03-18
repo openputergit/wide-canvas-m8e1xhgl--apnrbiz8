@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plug and Play</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        /* Claymorphism Theme */
+        .clay-card {
+            background-color: #f8f9fa;
+            border-radius: 16px;
+            box-shadow: 
+                8px 8px 16px rgba(163, 177, 198, 0.6),
+                -8px -8px 16px rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .clay-card:hover {
+            box-shadow: 
+                12px 12px 20px rgba(163, 177, 198, 0.7),
+                -12px -12px 20px rgba(255, 255, 255, 0.9);
+        }
+        
+        .clay-button {
+            background-color: #e0e5ec;
+            border-radius: 10px;
+            box-shadow: 
+                5px 5px 10px rgba(163, 177, 198, 0.6),
+                -5px -5px 10px rgba(255, 255, 255, 0.8);
+            transition: all 0.2s ease;
+        }
+        
+        .clay-button:hover {
+            box-shadow: 
+                3px 3px 6px rgba(163, 177, 198, 0.6),
+                -3px -3px 6px rgba(255, 255, 255, 0.8);
+        }
+        
+        .clay-button:active {
+            box-shadow: inset 
+                3px 3px 6px rgba(163, 177, 198, 0.6),
+                inset -3px -3px 6px rgba(255, 255, 255, 0.8);
+        }
+        
+        .clay-input {
+            background-color: #e0e5ec;
+            border: none;
+            border-radius: 10px;
+            box-shadow: inset 
+                3px 3px 6px rgba(163, 177, 198, 0.6),
+                inset -3px -3px 6px rgba(255, 255, 255, 0.8);
+            padding: 12px;
+        }
+        
+        .clay-input:focus {
+            outline: none;
+            box-shadow: inset 
+                4px 4px 8px rgba(163, 177, 198, 0.6),
+                inset -4px -4px 8px rgba(255, 255, 255, 0.8);
+        }
+
+        .nav-link:hover {
+            color: #4F46E5;
+            transition: all 0.3s ease;
+        }
+        
+        .product-card {
+            transition: all 0.3s ease;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .chat-widget {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .tab-btn.active {
+            background-color: #4F46E5;
+            color: white;
+            box-shadow: none;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .receipt-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .receipt-items {
+            margin-bottom: 20px;
+        }
+        
+        .receipt-total {
+            text-align: right;
+            font-weight: bold;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+        
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .receipt-container, .receipt-container * {
+                visibility: visible;
+            }
+            .receipt-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                box-shadow: none;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg fixed w-full top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="text-2xl font-bold text-indigo-600">Plug and Play</div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#home" class="nav-link">Home</a>
+                    <a href="#products" class="nav-link">Products</a>
+                    <a href="#services" class="nav-link">Services</a>
+                    <a href="#contact" class="nav-link">Contact</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="cartBtn" class="relative clay-button p-2">
+                        <i class="bi bi-cart text-xl"></i>
+                        <span id="cartCount" class="absolute -top-2 -right-2 bg-indigo-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">0</span>
+                    </button>
+                    <button id="userBtn" class="clay-button p-2">
+                        <i class="bi bi-person-circle text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="pt-24 pb-12 bg-gradient-to-r from-indigo-600 to-blue-500">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="md:w-1/2 text-white">
+                    <h1 class="text-4xl md:text-6xl font-bold mb-6">Your One-Stop Tech Solution</h1>
+                    <p class="text-lg mb-8">Buy, Rent, or Repair - We've got you covered!</p>
+                    <button id="shopNowBtn" class="clay-button bg-white text-indigo-600 px-8 py-3 rounded-lg font-semibold hover:bg-opacity-90 transition">Shop Now</button>
+                </div>
+                <div class="md:w-1/2 mt-8 md:mt-0">
+                    <img src="https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="Modern Laptop" class="rounded-lg shadow-xl clay-card">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Products -->
+    <section id="products" class="py-16">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-8">Featured Products</h2>
+            <p class="text-center text-gray-600 mb-12">Choose between our high-quality refurbished laptops or flexible rental options</p>
+            
+            <!-- Product Tabs -->
+            <div class="flex justify-center mb-8">
+                <div class="inline-flex rounded-md shadow-sm" role="group">
+                    <button id="refurbishedTab" class="tab-btn active clay-button px-6 py-3 rounded-l-lg border border-gray-300 font-medium">
+                        Refurbished Laptops
+                    </button>
+                    <button id="rentalTab" class="tab-btn clay-button px-6 py-3 rounded-r-lg border border-gray-300 font-medium">
+                        Laptop Rentals
+                    </button>
+                </div>
+            </div>
+
+            <!-- Refurbished Laptops -->
+            <div id="refurbishedContent" class="tab-content active">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <!-- Product Cards will be generated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Rental Laptops -->
+            <div id="rentalContent" class="tab-content">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <!-- Rental Cards will be generated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="py-16 bg-gray-100">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-8">Our Services</h2>
+            <p class="text-center text-gray-600 mb-12">Expert laptop repair and maintenance services for all brands</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="clay-card bg-white p-6 rounded-lg">
+                    <div class="h-14 w-14 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+                        <i class="bi bi-tools text-2xl text-indigo-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Hardware Repairs</h3>
+                    <p class="text-gray-600 mb-4">Screen replacement, keyboard fixes, battery replacements, and more.</p>
+                    <button class="text-indigo-600 font-medium hover:underline">Book Now <i class="bi bi-arrow-right"></i></button>
+                </div>
+                <div class="clay-card bg-white p-6 rounded-lg">
+                    <div class="h-14 w-14 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+                        <i class="bi bi-cpu text-2xl text-indigo-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">System Optimization</h3>
+                    <p class="text-gray-600 mb-4">Speed up your laptop, remove viruses, and upgrade performance.</p>
+                    <button class="text-indigo-600 font-medium hover:underline">Book Now <i class="bi bi-arrow-right"></i></button>
+                </div>
+                <div class="clay-card bg-white p-6 rounded-lg">
+                    <div class="h-14 w-14 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+                        <i class="bi bi-clipboard-check text-2xl text-indigo-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Laptop Diagnostics</h3>
+                    <p class="text-gray-600 mb-4">Comprehensive checkup to identify and resolve all issues.</p>
+                    <button class="text-indigo-600 font-medium hover:underline">Book Now <i class="bi bi-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <div class="mt-12 clay-card bg-white p-8 rounded-lg">
+                <h3 class="text-2xl font-semibold mb-6 text-center">Raise a Repair Query</h3>
+                <form id="repairForm" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="name" class="block mb-2 text-sm font-medium">Your Name</label>
+                            <input type="text" id="name" class="clay-input w-full p-3 rounded-lg" required>
+                        </div>
+                        <div>
+                            <label for="email" class="block mb-2 text-sm font-medium">Email Address</label>
+                            <input type="email" id="email" class="clay-input w-full p-3 rounded-lg" required>
+                        </div>
+                        <div>
+                            <label for="phone" class="block mb-2 text-sm font-medium">Phone Number</label>
+                            <input type="tel" id="phone" class="clay-input w-full p-3 rounded-lg" required>
+                        </div>
+                        <div>
+                            <label for="laptop" class="block mb-2 text-sm font-medium">Laptop Model</label>
+                            <input type="text" id="laptop" class="clay-input w-full p-3 rounded-lg" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="issue" class="block mb-2 text-sm font-medium">Describe the Issue</label>
+                        <textarea id="issue" rows="4" class="clay-input w-full p-3 rounded-lg" required></textarea>
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm font-medium">Preferred Appointment Date</label>
+                        <input type="date" id="date" class="clay-input w-full p-3 rounded-lg" required>
+                    </div>
+                    <button type="submit" class="w-full clay-button bg-indigo-600 text-white font-medium py-3 px-4 rounded-lg hover:bg-indigo-700 transition">Submit Request</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="py-16">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">What Our Customers Say</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="clay-card bg-white p-6 rounded-lg">
+                    <div class="flex items-center mb-4">
+                        <div class="text-yellow-400 mr-2">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <span class="text-gray-600">5.0</span>
+                    </div>
+                    <p class="text-gray-600 italic mb-4">"Fantastic service! They repaired my MacBook Pro in less than 24 hours. Highly recommend their expert team."</p>
+                    <div class="font-semibold">Sarah Johnson</div>
+                </div>
+                <div class="clay-card bg-white p-6 rounded-lg">
+                    <div class="flex items-center mb-4">
+                        <div class="text-yellow-400 mr-2">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-half"></i>
+                        </div>
+                        <span class="text-gray-600">4.5</span>
+                    </div>
+                    <p class="text-gray-600 italic mb-4">"I rented a Dell XPS for a month and was impressed by the laptop quality and the smooth rental process."</p>
+                    <div class="font-semibold">Michael Chen</div>
+                </div>
+                <div class="clay-card bg-white p-6 rounded-lg">
+                    <div class="flex items-center mb-4">
+                        <div class="text-yellow-400 mr-2">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <span class="text-gray-600">5.0</span>
+                    </div>
+                    <p class="text-gray-600 italic mb-4">"Bought a refurbished ThinkPad that works like new. Great value and excellent customer service!"</p>
+                    <div class="font-semibold">Jessica Williams</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-16 bg-gray-100">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">Contact Us</h2>
+            <div class="flex flex-col md:flex-row gap-8">
+                <div class="md:w-1/2 clay-card bg-white p-8 rounded-lg">
+                    <h3 class="text-xl font-semibold mb-6">Get in Touch</h3>
+                    <form class="space-y-6">
+                        <div>
+                            <label for="contactName" class="block mb-2 text-sm font-medium">Your Name</label>
+                            <input type="text" id="contactName" class="clay-input w-full p-3 rounded-lg" required>
+                        </div>
+                        <div>
+                            <label for="contactEmail" class="block mb-2 text-sm font-medium">Email Address</label>
+                            <input type="email" id="contactEmail" class="clay-input w-full p-3 rounded-lg" required>
+                        </div>
+                        <div>
+                            <label for="contactMessage" class="block mb-2 text-sm font-medium">Your Message</label>
+                            <textarea id="contactMessage" rows="4" class="clay-input w-full p-3 rounded-lg" required></textarea>
+                        </div>
+                        <button type="submit" class="w-full clay-button bg-indigo-600 text-white font-medium py-3 px-4 rounded-lg hover:bg-indigo-700 transition">Send Message</button>
+                    </form>
+                </div>
+                <div class="md:w-1/2 clay-card bg-white p-8 rounded-lg">
+                    <h3 class="text-xl font-semibold mb-6">Store Information</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <i class="bi bi-geo-alt text-indigo-600 text-xl mr-4 mt-1"></i>
+                            <div>
+                                <h4 class="font-medium">Address</h4>
+                                <p class="text-gray-600">123 Tech Street, Innovation District, Cityville, 12345</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="bi bi-telephone text-indigo-600 text-xl mr-4 mt-1"></i>
+                            <div>
+                                <h4 class="font-medium">Phone</h4>
+                                <p class="text-gray-600">+1 (555) 123-4567</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="bi bi-envelope text-indigo-600 text-xl mr-4 mt-1"></i>
+                            <div>
+                                <h4 class="font-medium">Email</h4>
+                                <p class="text-gray-600">support@techhub.com</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="bi bi-clock text-indigo-600 text-xl mr-4 mt-1"></i>
+                            <div>
+                                <h4 class="font-medium">Business Hours</h4>
+                                <p class="text-gray-600">Monday - Friday: 9AM to 8PM<br>Weekends: 10AM to 6PM</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-8 h-48 bg-gray-200 rounded-lg">
+                        <!-- Map placeholder -->
+                        <div class="h-full flex items-center justify-center text-gray-500">
+                            <p>Google Map Integration</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">TechHub</h3>
+                    <p class="text-gray-400">Your one-stop solution for all laptop needs - buy, rent, or repair.</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#home" class="text-gray-400 hover:text-white transition">Home</a></li>
+                        <li><a href="#products" class="text-gray-400 hover:text-white transition">Products</a></li>
+                        <li><a href="#services" class="text-gray-400 hover:text-white transition">Services</a></li>
+                        <li><a href="#contact" class="text-gray-400 hover:text-white transition">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Services</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Laptop Repair</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Laptop Rental</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Refurbished Sales</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Technical Support</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Newsletter</h4>
+                    <p class="text-gray-400 mb-4">Subscribe for updates and offers</p>
+                    <div class="flex">
+                        <input type="email" placeholder="Your email address" class="clay-input p-2 rounded-l-lg flex-1">
+                        <button class="clay-button bg-indigo-600 text-white px-4 py-2 rounded-r-lg">Subscribe</button>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 flex flex-col md:flex-row justify-between">
+                <p class="text-gray-400">© 2023 TechHub. All rights reserved.</p>
+                <div class="flex space-x-4 mt-4 md:mt-0">
+                    <a href="#" class="text-gray-400 hover:text-white transition"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white transition"><i class="bi bi-twitter"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white transition"><i class="bi bi-instagram"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white transition"><i class="bi bi-linkedin"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Shopping Option Modal -->
+    <div id="shopModal" class="modal">
+        <div class="clay-card bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">Shop Options</h3>
+                <button id="closeShopModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button id="shopRefurbished" class="clay-button bg-indigo-600 text-white font-medium py-4 px-6 rounded-lg hover:bg-indigo-700 transition flex flex-col items-center">
+                    <i class="bi bi-laptop text-3xl mb-2"></i>
+                    <span>Refurbished Laptops</span>
+                </button>
+                <button id="shopRental" class="clay-button bg-blue-500 text-white font-medium py-4 px-6 rounded-lg hover:bg-blue-600 transition flex flex-col items-center">
+                    <i class="bi bi-calendar-check text-3xl mb-2"></i>
+                    <span>Laptop Rentals</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Modal -->
+    <div id="cartModal" class="modal">
+        <div class="clay-card bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">Your Cart</h3>
+                <button id="closeCartModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div id="cartItems" class="mb-6">
+                <!-- Cart items will be displayed here -->
+                <p id="emptyCart" class="text-gray-500 text-center py-8">Your cart is empty</p>
+            </div>
+            <div class="border-t pt-4">
+                <div class="flex justify-between font-semibold mb-4">
+                    <span>Total:</span>
+                    <span id="cartTotal">$0.00</span>
+                </div>
+                <button id="checkoutBtn" class="w-full clay-button bg-indigo-600 text-white font-medium py-3 px-4 rounded-lg hover:bg-indigo-700 transition">Proceed to Checkout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Detail Modal -->
+    <div id="productModal" class="modal">
+        <div class="clay-card bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="modalProductTitle" class="text-xl font-bold">Product Details</h3>
+                <button id="closeProductModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="flex flex-col md:flex-row gap-6">
+                <div class="md:w-1/2">
+                    <img id="modalProductImage" src="" alt="Product" class="w-full h-auto rounded-lg">
+                </div>
+                <div class="md:w-1/2">
+                    <h4 id="modalProductName" class="text-xl font-semibold mb-2"></h4>
+                    <p id="modalProductPrice" class="text-lg font-bold text-indigo-600 mb-4"></p>
+                    <div id="modalProductSpecs" class="mb-6 space-y-2"></div>
+                    <div id="rentalOptions" class="mb-6 hidden">
+                        <h5 class="font-semibold mb-2">Rental Duration:</h5>
+                        <div class="flex space-x-3 mb-4">
+                            <button class="rental-period clay-button px-4 py-2 rounded-md" data-days="7" data-multiplier="1">7 Days</button>
+                            <button class="rental-period clay-button px-4 py-2 rounded-md" data-days="14" data-multiplier="1.8">14 Days</button>
+                            <button class="rental-period clay-button px-4 py-2 rounded-md" data-days="30" data-multiplier="3">30 Days</button>
+                        </div>
+                        <p class="text-gray-600" id="rentalPrice">Select duration to see price</p>
+                    </div>
+                    <div class="flex space-x-4">
+                        <div class="flex border border-gray-300 rounded-md">
+                            <button id="decreaseQuantity" class="px-3 py-1 border-r border-gray-300">-</button>
+                            <input type="number" id="productQuantity" min="1" value="1" class="w-12 text-center">
+                            <button id="increaseQuantity" class="px-3 py-1 border-l border-gray-300">+</button>
+                        </div>
+                        <button id="addToCartBtn" class="flex-1 clay-button bg-indigo-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-indigo-700 transition">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkoutModal" class="modal">
+        <div class="clay-card bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">Checkout</h3>
+                <button id="closeCheckoutModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <form id="checkoutForm" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="checkoutName" class="block mb-2 text-sm font-medium">Your Name</label>
+                        <input type="text" id="checkoutName" class="clay-input w-full p-3 rounded-lg" required>
+                    </div>
+                    <div>
+                        <label for="checkoutEmail" class="block mb-2 text-sm font-medium">Email Address</label>
+                        <input type="email" id="checkoutEmail" class="clay-input w-full p-3 rounded-lg" required>
+                    </div>
+                    <div>
+                        <label for="checkoutAddress" class="block mb-2 text-sm font-medium">Delivery Address</label>
+                        <input type="text" id="checkoutAddress" class="clay-input w-full p-3 rounded-lg" required>
+                    </div>
+                    <div>
+                        <label for="checkoutPhone" class="block mb-2 text-sm font-medium">Phone Number</label>
+                        <input type="tel" id="checkoutPhone" class="clay-input w-full p-3 rounded-lg" required>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block mb-2 text-sm font-medium">Payment Method</label>
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <div class="flex items-center mb-2">
+                            <input type="radio" id="codPayment" name="paymentMethod" value="cod" checked class="mr-2">
+                            <label for="codPayment">Cash on Delivery</label>
+                        </div>
+                        <p class="text-sm text-gray-500">Other payment methods will be available soon.</p>
+                    </div>
+                </div>
+                
+                <div class="border-t pt-4">
+                    <div class="flex justify-between mb-2">
+                        <span>Subtotal:</span>
+                        <span id="checkoutSubtotal">$0.00</span>
+                    </div>
+                    <div class="flex justify-between mb-2">
+                        <span>Shipping:</span>
+                        <span>$10.00</span>
+                    </div>
+                    <div class="flex justify-between font-semibold text-lg">
+                        <span>Total:</span>
+                        <span id="checkoutTotal">$0.00</span>
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full clay-button bg-indigo-600 text-white font-medium py-3 px-4 rounded-lg hover:bg-indigo-700 transition">Complete Order</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Receipt Modal -->
+    <div id="receiptModal" class="modal">
+        <div class="clay-card bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">Receipt</h3>
+                <div class="flex space-x-4">
+                    <button id="printReceiptBtn" class="text-indigo-600 hover:text-indigo-800">
+                        <i class="bi bi-printer"></i> Print
+                    </button>
+                    <button id="saveReceiptBtn" class="text-indigo-600 hover:text-indigo-800">
+                        <i class="bi bi-download"></i> Save PDF
+                    </button>
+                    <button id="closeReceiptModal" class="text-gray-500 hover:text-gray-700">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="receipt-container clay-card">
+                <div class="receipt-header">
+                    <h2 class="text-2xl font-bold">Plug and Play</h2>
+                    <p>123 Tech Street, Innovation District</p>
+                    <p>Cityville, 12345</p>
+                    <p>Phone: +1 (555) 123-4567</p>
+                    <div class="mt-6">
+                        <p class="text-lg font-semibold" id="receiptOrderId"></p>
+                        <p id="receiptDate"></p>
+                    </div>
+                </div>
+                
+                <div class="customer-info my-6 border-b pb-4">
+                    <h3 class="font-semibold mb-2">Customer Information</h3>
+                    <div id="receiptCustomerDetails"></div>
+                </div>
+
+                <div class="receipt-items">
+                    <h3 class="font-semibold mb-2">Order Details</h3>
+                    <table class="w-full mb-4">
+                        <thead class="border-b">
+                            <tr class="text-left">
+                                <th class="py-2">Item</th>
+                                <th class="py-2 text-center">Qty</th>
+                                <th class="py-2 text-right">Price</th>
+                                <th class="py-2 text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="receiptItems">
+                            <!-- Receipt items will be added here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="receipt-summary">
+                    <div class="flex justify-between py-1">
+                        <span>Subtotal</span>
+                        <span id="receiptSubtotal">$0.00</span>
+                    </div>
+                    <div class="flex justify-between py-1">
+                        <span>Shipping</span>
+                        <span id="receiptShipping">$10.00</span>
+                    </div>
+                    <div class="flex justify-between font-bold text-lg py-2 border-t mt-2">
+                        <span>Total</span>
+                        <span id="receiptTotal">$0.00</span>
+                    </div>
+                    <div class="mt-4 pt-2 border-t">
+                        <p class="font-semibold">Payment Method</p>
+                        <p>Cash on Delivery</p>
+                    </div>
+                </div>
+                
+                <div class="mt-8 text-center text-gray-500">
+                    <p>Thank you for shopping with Plug and Play!</p>
+                    <p>For any queries, please contact our customer support.</p>
+                </div>
+                
+                <div class="mt-8 no-print">
+                    <button id="doneBtn" class="w-full clay-button bg-indigo-600 text-white font-medium py-3 px-4 rounded-lg hover:bg-indigo-700 transition">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Widget -->
+    <div class="chat-widget">
+        <button id="chatToggle" class="clay-button bg-indigo-600 text-white rounded-full p-4 shadow-lg">
+            <i class="bi bi-chat-dots text-xl"></i>
+        </button>
+    </div>
+
+    <script>
+        // Laptop data
+        const refurbishedLaptops = [
+            { id: 1, name: "MacBook Pro 2020", price: 1299, image: "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["13.3-inch Retina Display", "Apple M1 Chip", "8GB RAM", "512GB SSD", "Space Gray"] },
+            { id: 2, name: "Dell XPS 13", price: 1199, image: "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["13-inch FHD Display", "Intel Core i7-1165G7", "16GB RAM", "512GB SSD", "White"] },
+            { id: 3, name: "HP Spectre x360", price: 1099, image: "https://images.unsplash.com/photo-1544731612-de7f96afe55f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["15.6-inch 4K Display", "Intel Core i7-1165G7", "16GB RAM", "1TB SSD", "Nightfall Black"] },
+            { id: 4, name: "Lenovo ThinkPad X1", price: 1399, image: "https://images.unsplash.com/photo-1605377347958-e8bd4c00ba1d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["14-inch FHD Display", "Intel Core i7-1185G7", "16GB RAM", "1TB SSD", "Black"] },
+            { id: 5, name: "Asus ROG Zephyrus", price: 1599, image: "https://images.unsplash.com/photo-1603302576837-37561b2e2302?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["15.6-inch FHD 144Hz", "AMD Ryzen 9 5900HS", "16GB RAM", "1TB SSD", "RTX 3070"] },
+            { id: 6, name: "Microsoft Surface Laptop 4", price: 1199, image: "https://images.unsplash.com/photo-1618410320928-25228d811631?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["13.5-inch PixelSense", "AMD Ryzen 5", "8GB RAM", "256GB SSD", "Platinum"] },
+            { id: 7, name: "Razer Blade 15", price: 1799, image: "https://images.unsplash.com/photo-1570063578733-6a33b69d1bf9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["15.6-inch FHD 300Hz", "Intel Core i7-11800H", "16GB RAM", "1TB SSD", "RTX 3080"] },
+            { id: 8, name: "Acer Swift 5", price: 999, image: "https://images.unsplash.com/photo-1580522154071-c6ca47a859ad?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["14-inch FHD Touch", "Intel Core i7-1165G7", "16GB RAM", "512GB SSD", "Mist Green"] },
+            { id: 9, name: "LG Gram 17", price: 1299, image: "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["17-inch WQXGA Display", "Intel Core i7-1165G7", "16GB RAM", "1TB SSD", "Black"] },
+            { id: 10, name: "Samsung Galaxy Book Pro", price: 1099, image: "https://images.unsplash.com/photo-1494173853739-c21f58b16055?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["15.6-inch AMOLED", "Intel Core i7-1165G7", "16GB RAM", "512GB SSD", "Mystic Silver"] },
+            { id: 11, name: "Apple MacBook Air M2", price: 1099, image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["13.6-inch Liquid Retina", "Apple M2 Chip", "8GB RAM", "256GB SSD", "Midnight"] },
+            { id: 12, name: "Lenovo Yoga 9i", price: 1349, image: "https://images.unsplash.com/photo-1611078489935-0cb964de46d6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["14-inch 4K Touch", "Intel Core i7-1185G7", "16GB RAM", "1TB SSD", "Shadow Black"] },
+            { id: 13, name: "Dell Inspiron 15", price: 849, image: "https://images.unsplash.com/photo-1593642634315-48f5414c3ad9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["15.6-inch FHD", "Intel Core i5-1135G7", "8GB RAM", "512GB SSD", "Silver"] },
+            { id: 14, name: "MSI Creator Z16", price: 1799, image: "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["16-inch QHD+ Touch", "Intel Core i7-11800H", "32GB RAM", "1TB SSD", "RTX 3060"] },
+            { id: 15, name: "Acer Predator Helios 300", price: 1299, image: "https://images.unsplash.com/photo-1527443060795-0402a18106c2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["15.6-inch FHD 144Hz", "Intel Core i7-11800H", "16GB RAM", "512GB SSD", "RTX 3060"] },
+            { id: 16, name: "HP Envy x360", price: 899, image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["13.3-inch FHD Touch", "AMD Ryzen 5 5500U", "8GB RAM", "256GB SSD", "Nightfall Black"] },
+            { id: 17, name: "Asus ZenBook Pro Duo", price: 2399, image: "https://images.unsplash.com/photo-1531297484001-80022131f5a1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["15.6-inch 4K OLED", "Intel Core i9-10980HK", "32GB RAM", "1TB SSD", "RTX 3070"] },
+            { id: 18, name: "Google Pixelbook Go", price: 699, image: "https://images.unsplash.com/photo-1530893609608-32a9af3aa95c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["13.3-inch FHD", "Intel Core i5", "8GB RAM", "128GB SSD", "Just Black"] },
+            { id: 19, name: "Microsoft Surface Book 3", price: 1599, image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["13.5-inch PixelSense", "Intel Core i7", "16GB RAM", "256GB SSD", "Platinum"] },
+            { id: 20, name: "Alienware m15 R6", price: 1899, image: "https://images.unsplash.com/photo-1629429407759-01cd3d7cfb38?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["15.6-inch FHD 360Hz", "Intel Core i9-11900H", "32GB RAM", "1TB SSD", "RTX 3080"] },
+        ];
+
+        const rentalLaptops = [
+            { id: 101, name: "MacBook Pro 2021", basePrice: 45, image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["16-inch Liquid Retina XDR", "Apple M1 Pro Chip", "16GB RAM", "512GB SSD", "Space Gray"] },
+            { id: 102, name: "Dell XPS 15", basePrice: 40, image: "https://images.unsplash.com/photo-1593642634315-48f5414c3ad9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["15.6-inch 4K UHD+", "Intel Core i7-11800H", "16GB RAM", "1TB SSD", "Silver"] },
+            { id: 103, name: "Lenovo Legion 5", basePrice: 35, image: "https://images.unsplash.com/photo-1605377347958-e8bd4c00ba1d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["15.6-inch FHD 165Hz", "AMD Ryzen 7 5800H", "16GB RAM", "512GB SSD", "RTX 3060"] },
+            { id: 104, name: "Microsoft Surface Laptop 4", basePrice: 30, image: "https://images.unsplash.com/photo-1618410320928-25228d811631?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["15-inch PixelSense", "AMD Ryzen 7", "16GB RAM", "512GB SSD", "Platinum"] },
+            { id: 105, name: "HP Envy 13", basePrice: 25, image: "https://images.unsplash.com/photo-1544731612-de7f96afe55f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["13.3-inch FHD", "Intel Core i5-1135G7", "8GB RAM", "256GB SSD", "Silver"] },
+            { id: 106, name: "Asus ROG Strix G15", basePrice: 50, image: "https://images.unsplash.com/photo-1603302576837-37561b2e2302?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["15.6-inch FHD 300Hz", "AMD Ryzen 9 5900HX", "32GB RAM", "1TB SSD", "RTX 3070"] },
+            { id: 107, name: "Acer Nitro 5", basePrice: 30, image: "https://images.unsplash.com/photo-1527443060795-0402a18106c2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["15.6-inch FHD 144Hz", "Intel Core i5-10300H", "8GB RAM", "512GB SSD", "GTX 1650"] },
+            { id: 108, name: "Razer Blade 17", basePrice: 55, image: "https://images.unsplash.com/photo-1570063578733-6a33b69d1bf9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["17.3-inch QHD 240Hz", "Intel Core i9-11900H", "32GB RAM", "1TB SSD", "RTX 3080"] },
+            { id: 109, name: "LG Gram 16", basePrice: 35, image: "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["16-inch WQXGA", "Intel Core i7-1165G7", "16GB RAM", "1TB SSD", "Black"] },
+            { id: 110, name: "Samsung Galaxy Book Pro 360", basePrice: 40, image: "https://images.unsplash.com/photo-1494173853739-c21f58b16055?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["15.6-inch AMOLED", "Intel Core i7-1165G7", "16GB RAM", "512GB SSD", "Mystic Navy"] },
+            { id: 111, name: "Apple MacBook Air M2", basePrice: 40, image: "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["13.6-inch Liquid Retina", "Apple M2 Chip", "8GB RAM", "512GB SSD", "Starlight"] },
+            { id: 112, name: "MSI GS66 Stealth", basePrice: 45, image: "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["15.6-inch FHD 240Hz", "Intel Core i7-11800H", "16GB RAM", "1TB SSD", "RTX 3070"] },
+            { id: 113, name: "Lenovo ThinkPad X1 Extreme", basePrice: 50, image: "https://images.unsplash.com/photo-1611078489935-0cb964de46d6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["15.6-inch 4K", "Intel Core i9-11950H", "32GB RAM", "2TB SSD", "RTX 3080"] },
+            { id: 114, name: "HP Spectre x360 14", basePrice: 40, image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["13.5-inch 3K2K OLED", "Intel Core i7-1165G7", "16GB RAM", "1TB SSD", "Nightfall Black"] },
+            { id: 115, name: "Alienware x17", basePrice: 60, image: "https://images.unsplash.com/photo-1629429407759-01cd3d7cfb38?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["17.3-inch FHD 360Hz", "Intel Core i9-11980HK", "32GB RAM", "2TB SSD", "RTX 3080"] },
+            { id: 116, name: "Dell G15", basePrice: 30, image: "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["15.6-inch FHD 120Hz", "AMD Ryzen 5 5600H", "8GB RAM", "512GB SSD", "RTX 3050"] },
+            { id: 117, name: "Microsoft Surface Pro 8", basePrice: 35, image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["13-inch PixelSense 120Hz", "Intel Core i7-1185G7", "16GB RAM", "512GB SSD", "Platinum"] },
+            { id: 118, name: "Asus TUF Gaming A15", basePrice: 35, image: "https://images.unsplash.com/photo-1531297484001-80022131f5a1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["15.6-inch FHD 144Hz", "AMD Ryzen 7 4800H", "16GB RAM", "512GB SSD", "RTX 3060"] },
+            { id: 119, name: "Acer Swift X", basePrice: 30, image: "https://images.unsplash.com/photo-1580522154071-c6ca47a859ad?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["14-inch FHD", "AMD Ryzen 7 5800U", "16GB RAM", "512GB SSD", "RTX 3050 Ti"] },
+            { id: 120, name: "Gigabyte AERO 15 OLED", basePrice: 55, image: "https://images.unsplash.com/photo-1530893609608-32a9af3aa95c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80", specs: ["15.6-inch 4K OLED", "Intel Core i9-11980HK", "32GB RAM", "1TB SSD", "RTX 3080"] },
+        ];
+
+        // Cart functionality
+        let cart = [];
+        const cartBtn = document.getElementById('cartBtn');
+        const cartCount = document.getElementById('cartCount');
+        const cartModal = document.getElementById('cartModal');
+        const closeCartModal = document.getElementById('closeCartModal');
+        const cartItems = document.getElementById('cartItems');
+        const emptyCart = document.getElementById('emptyCart');
+        const cartTotal = document.getElementById('cartTotal');
+        const checkoutBtn = document.getElementById('checkoutBtn');
+
+        // Product detail modal functionality
+        const productModal = document.getElementById('productModal');
+        const closeProductModal = document.getElementById('closeProductModal');
+        const modalProductTitle = document.getElementById('modalProductTitle');
+        const modalProductImage = document.getElementById('modalProductImage');
+        const modalProductName = document.getElementById('modalProductName');
+        const modalProductPrice = document.getElementById('modalProductPrice');
+        const modalProductSpecs = document.getElementById('modalProductSpecs');
+        const rentalOptions = document.getElementById('rentalOptions');
+        const rentalPrice = document.getElementById('rentalPrice');
+        const decreaseQuantity = document.getElementById('decreaseQuantity');
+        const productQuantity = document.getElementById('productQuantity');
+        const increaseQuantity = document.getElementById('increaseQuantity');
+        const addToCartBtn = document.getElementById('addToCartBtn');
+
+        // Shop Now button
+        const shopNowBtn = document.getElementById('shopNowBtn');
+        const shopModal = document.getElementById('shopModal');
+        const closeShopModal = document.getElementById('closeShopModal');
+        const shopRefurbished = document.getElementById('shopRefurbished');
+        const shopRental = document.getElementById('shopRental');
+
+        // Tab functionality
+        const refurbishedTab = document.getElementById('refurbishedTab');
+        const rentalTab = document.getElementById('rentalTab');
+        const refurbishedContent = document.getElementById('refurbishedContent');
+        const rentalContent = document.getElementById('rentalContent');
+
+        // Checkout & Receipt Modal
+        const checkoutModal = document.getElementById('checkoutModal');
+        const closeCheckoutModal = document.getElementById('closeCheckoutModal');
+        const checkoutForm = document.getElementById('checkoutForm');
+        const checkoutSubtotal = document.getElementById('checkoutSubtotal');
+        const checkoutTotal = document.getElementById('checkoutTotal');
+
+        const receiptModal = document.getElementById('receiptModal');
+        const closeReceiptModal = document.getElementById('closeReceiptModal');
+        const printReceiptBtn = document.getElementById('printReceiptBtn');
+        const saveReceiptBtn = document.getElementById('saveReceiptBtn');
+        const doneBtn = document.getElementById('doneBtn');
+
+        // Populate product lists
+        window.addEventListener('DOMContentLoaded', () => {
+            const refurbishedContainer = document.querySelector('#refurbishedContent .grid');
+            const rentalContainer = document.querySelector('#rentalContent .grid');
+
+            // Populate refurbished laptops
+            refurbishedLaptops.forEach(laptop => {
+                const card = document.createElement('div');
+                card.className = 'clay-card bg-white rounded-lg overflow-hidden product-card';
+                card.innerHTML = `
+                    <img src="${laptop.image}" alt="${laptop.name}" class="w-full h-48 object-cover">
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg mb-2">${laptop.name}</h3>
+                        <p class="text-indigo-600 font-bold mb-3">$${laptop.price}</p>
+                        <button class="view-product w-full clay-button bg-indigo-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-indigo-700 transition" data-id="${laptop.id}" data-type="refurbished">View Details</button>
+                    </div>
+                `;
+                refurbishedContainer.appendChild(card);
+            });
+
+            // Populate rental laptops
+            rentalLaptops.forEach(laptop => {
+                const card = document.createElement('div');
+                card.className = 'clay-card bg-white rounded-lg overflow-hidden product-card';
+                card.innerHTML = `
+                    <img src="${laptop.image}" alt="${laptop.name}" class="w-full h-48 object-cover">
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg mb-2">${laptop.name}</h3>
+                        <p class="text-indigo-600 font-bold mb-3">From $${laptop.basePrice}/day</p>
+                        <button class="view-product w-full clay-button bg-indigo-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-indigo-700 transition" data-id="${laptop.id}" data-type="rental">View Details</button>
+                    </div>
+                `;
+                rentalContainer.appendChild(card);
+            });
+
+            // Add event listeners to view product buttons
+            document.querySelectorAll('.view-product').forEach(button => {
+                button.addEventListener('click', () => {
+                    const productId = parseInt(button.getAttribute('data-id'));
+                    const productType = button.getAttribute('data-type');
+                    
+                    openProductModal(productId, productType);
+                });
+            });
+        });
+
+        // Shop Now Button
+        shopNowBtn.addEventListener('click', () => {
+            shopModal.classList.add('active');
+        });
+
+        closeShopModal.addEventListener('click', () => {
+            shopModal.classList.remove('active');
+        });
+
+        shopRefurbished.addEventListener('click', () => {
+            shopModal.classList.remove('active');
+            document.querySelector('#products').scrollIntoView({ behavior: 'smooth' });
+            refurbishedTab.click();
+        });
+
+        shopRental.addEventListener('click', () => {
+            shopModal.classList.remove('active');
+            document.querySelector('#products').scrollIntoView({ behavior: 'smooth' });
+            rentalTab.click();
+        });
+
+        // Tab switching
+        refurbishedTab.addEventListener('click', () => {
+            refurbishedTab.classList.add('active');
+            rentalTab.classList.remove('active');
+            refurbishedContent.classList.add('active');
+            rentalContent.classList.remove('active');
+        });
+
+        rentalTab.addEventListener('click', () => {
+            rentalTab.classList.add('active');
+            refurbishedTab.classList.remove('active');
+            rentalContent.classList.add('active');
+            refurbishedContent.classList.remove('active');
+        });
+
+        // Open product modal
+        function openProductModal(productId, productType) {
+            let product;
+            let isRental = false;
+
+            if (productType === 'refurbished') {
+                product = refurbishedLaptops.find(laptop => laptop.id === productId);
+                rentalOptions.classList.add('hidden');
+                modalProductTitle.textContent = "Refurbished Laptop";
+                modalProductPrice.textContent = `$${product.price}`;
+            } else if (productType === 'rental') {
+                product = rentalLaptops.find(laptop => laptop.id === productId);
+                rentalOptions.classList.remove('hidden');
+                modalProductTitle.textContent = "Laptop Rental";
+                modalProductPrice.textContent = `From $${product.basePrice}/day`;
+                isRental = true;
+            }
+
+            modalProductImage.src = product.image;
+            modalProductName.textContent = product.name;
+
+            // Clear and populate specs
+            modalProductSpecs.innerHTML = '';
+            product.specs.forEach(spec => {
+                const specItem = document.createElement('p');
+                specItem.className = 'flex items-center text-gray-600';
+                specItem.innerHTML = `<i class="bi bi-check-circle-fill text-green-500 mr-2"></i> ${spec}`;
+                modalProductSpecs.appendChild(specItem);
+            });
+
+            // Set up rental period buttons
+            if (isRental) {
+                document.querySelectorAll('.rental-period').forEach(btn => {
+                    btn.classList.remove('bg-indigo-600', 'text-white');
+                    
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.rental-period').forEach(b => 
+                            b.classList.remove('bg-indigo-600', 'text-white')
+                        );
+                        btn.classList.add('bg-indigo-600', 'text-white');
+
+                        const days = parseInt(btn.getAttribute('data-days'));
+                        const multiplier = parseFloat(btn.getAttribute('data-multiplier'));
+                        const total = (product.basePrice * multiplier).toFixed(2);
+                        
+                        rentalPrice.textContent = `$${total} for ${days} days`;
+                        
+                        // Set up add to cart button for rental
+                        addToCartBtn.setAttribute('data-days', days);
+                        addToCartBtn.setAttribute('data-total', total);
+                    });
+                });
+
+                rentalPrice.textContent = 'Select duration to see price';
+            }
+
+            // Set up add to cart button
+            addToCartBtn.setAttribute('data-id', product.id);
+            addToCartBtn.setAttribute('data-type', productType);
+
+            // Show modal
+            productModal.classList.add('active');
+        }
+
+        // Quantity controls
+        decreaseQuantity.addEventListener('click', () => {
+            let qty = parseInt(productQuantity.value);
+            if (qty > 1) {
+                productQuantity.value = qty - 1;
+            }
+        });
+
+        increaseQuantity.addEventListener('click', () => {
+            let qty = parseInt(productQuantity.value);
+            productQuantity.value = qty + 1;
+        });
+
+        // Add to cart functionality
+        addToCartBtn.addEventListener('click', () => {
+            const productId = parseInt(addToCartBtn.getAttribute('data-id'));
+            const productType = addToCartBtn.getAttribute('data-type');
+            const quantity = parseInt(productQuantity.value);
+            
+            let product;
+            let price;
+            let cartItem = {
+                id: productId,
+                type: productType,
+                quantity: quantity
+            };
+
+            if (productType === 'refurbished') {
+                product = refurbishedLaptops.find(laptop => laptop.id === productId);
+                price = product.price;
+                cartItem.price = price;
+                cartItem.name = product.name;
+                cartItem.image = product.image;
+            } else if (productType === 'rental') {
+                product = rentalLaptops.find(laptop => laptop.id === productId);
+                const days = parseInt(addToCartBtn.getAttribute('data-days')) || 0;
+                const total = parseFloat(addToCartBtn.getAttribute('data-total')) || 0;
+                
+                if (days === 0) {
+                    alert('Please select a rental duration');
+                    return;
+                }
+
+                cartItem.days = days;
+                cartItem.price = total;
+                cartItem.name = product.name;
+                cartItem.image = product.image;
+            }
+
+            // Add to cart
+            cart.push(cartItem);
+            updateCart();
+            
+            // Close modal
+            productModal.classList.remove('active');
+            
+            // Reset quantity
+            productQuantity.value = 1;
+            
+            // Show success message
+            alert(`${product.name} added to cart!`);
+        });
+
+        // Update cart count and contents
+        function updateCart() {
+            cartCount.textContent = cart.length;
+            
+            // Update cart contents
+            if (cart.length === 0) {
+                emptyCart.style.display = 'block';
+                cartItems.innerHTML = '';
+                cartTotal.textContent = '$0.00';
+            } else {
+                emptyCart.style.display = 'none';
+                cartItems.innerHTML = '';
+                
+                let total = 0;
+                
+                cart.forEach((item, index) => {
+                    const itemElement = document.createElement('div');
+                    itemElement.className = 'flex items-center p-4 border-b';
+                    
+                    const itemPrice = parseFloat(item.price) * item.quantity;
+                    total += itemPrice;
+                    
+                    itemElement.innerHTML = `
+                        <img src="${item.image}" alt="${item.name}" class="w-16 h-16 object-cover rounded mr-4">
+                        <div class="flex-1">
+                            <h4 class="font-medium">${item.name}</h4>
+                            <p class="text-sm text-gray-600">
+                                ${item.type === 'rental' ? `${item.days} days rental` : 'Refurbished'}
+                            </p>
+                            <div class="flex justify-between mt-1">
+                                <span>${item.quantity} x $${item.price}</span>
+                                <span class="font-medium">$${itemPrice.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        <button class="remove-item ml-2 text-red-500" data-index="${index}">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    `;
+                    
+                    cartItems.appendChild(itemElement);
+                });
+                
+                // Add remove functionality
+                document.querySelectorAll('.remove-item').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const index = parseInt(button.getAttribute('data-index'));
+                        cart.splice(index, 1);
+                        updateCart();
+                    });
+                });
+                
+                cartTotal.textContent = `$${total.toFixed(2)}`;
+            }
+        }
+
+        // Open/close cart modal
+        cartBtn.addEventListener('click', () => {
+            cartModal.classList.add('active');
+        });
+
+        closeCartModal.addEventListener('click', () => {
+            cartModal.classList.remove('active');
+        });
+
+        // Close product modal
+        closeProductModal.addEventListener('click', () => {
+            productModal.classList.remove('active');
+        });
+
+        // Checkout process
+        checkoutBtn.addEventListener('click', () => {
+            if (cart.length > 0) {
+                cartModal.classList.remove('active');
+                
+                // Calculate totals
+                let subtotal = 0;
+                cart.forEach(item => {
+                    subtotal += parseFloat(item.price) * item.quantity;
+                });
+                
+                const shipping = 10;
+                const total = subtotal + shipping;
+                
+                // Update checkout modal
+                checkoutSubtotal.textContent = `$${subtotal.toFixed(2)}`;
+                checkoutTotal.textContent = `$${total.toFixed(2)}`;
+                
+                // Show checkout modal
+                checkoutModal.classList.add('active');
+            } else {
+                alert('Your cart is empty!');
+            }
+        });
+
+        // Close checkout modal
+        closeCheckoutModal.addEventListener('click', () => {
+            checkoutModal.classList.remove('active');
+        });
+
+        // Checkout form submission
+        checkoutForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // Get customer information
+            const customerName = document.getElementById('checkoutName').value;
+            const customerEmail = document.getElementById('checkoutEmail').value;
+            const customerAddress = document.getElementById('checkoutAddress').value;
+            const customerPhone = document.getElementById('checkoutPhone').value;
+            
+            // Calculate totals
+            let subtotal = 0;
+            cart.forEach(item => {
+                subtotal += parseFloat(item.price) * item.quantity;
+            });
+            
+            const shipping = 10;
+            const total = subtotal + shipping;
+            
+            // Generate order ID
+            const orderId = `ORD-${Date.now().toString().substr(-6)}`;
+            
+            // Get current date
+            const orderDate = new Date().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            // Update receipt
+            document.getElementById('receiptOrderId').textContent = `Order #${orderId}`;
+            document.getElementById('receiptDate').textContent = `Date: ${orderDate}`;
+            
+            document.getElementById('receiptCustomerDetails').innerHTML = `
+                <p>${customerName}</p>
+                <p>${customerEmail}</p>
+                <p>${customerAddress}</p>
+                <p>${customerPhone}</p>
+            `;
+            
+            const receiptItems = document.getElementById('receiptItems');
+            receiptItems.innerHTML = '';
+            
+            cart.forEach(item => {
+                const itemTotal = parseFloat(item.price) * item.quantity;
+                const row = document.createElement('tr');
+                row.className = 'border-b';
+                row.innerHTML = `
+                    <td class="py-2">
+                        <div class="font-medium">${item.name}</div>
+                        <div class="text-sm text-gray-600">${item.type === 'rental' ? `${item.days} days rental` : 'Refurbished'}</div>
+                    </td>
+                    <td class="py-2 text-center">${item.quantity}</td>
+                    <td class="py-2 text-right">$${parseFloat(item.price).toFixed(2)}</td>
+                    <td class="py-2 text-right">$${itemTotal.toFixed(2)}</td>
+                `;
+                receiptItems.appendChild(row);
+            });
+            
+            document.getElementById('receiptSubtotal').textContent = `$${subtotal.toFixed(2)}`;
+            document.getElementById('receiptShipping').textContent = `$${shipping.toFixed(2)}`;
+            document.getElementById('receiptTotal').textContent = `$${total.toFixed(2)}`;
+            
+            // Close checkout modal
+            checkoutModal.classList.remove('active');
+            
+            // Show receipt modal
+            receiptModal.classList.add('active');
+        });
+
+        // Print Receipt
+        printReceiptBtn.addEventListener('click', () => {
+            window.print();
+        });
+
+        // Save Receipt as PDF
+        saveReceiptBtn.addEventListener('click', () => {
+            alert('PDF download started!');
+            // In a real implementation, you would use a library like jsPDF or html2pdf
+        });
+
+        // Close receipt and finish order
+        closeReceiptModal.addEventListener('click', () => {
+            receiptModal.classList.remove('active');
+            // Clear cart
+            cart = [];
+            updateCart();
+        });
+
+        doneBtn.addEventListener('click', () => {
+            receiptModal.classList.remove('active');
+            // Clear cart and show confirmation
+            cart = [];
+            updateCart();
+            alert('Thank you for your purchase! Your order has been confirmed.');
+        });
+
+        // Chat Widget
+        const chatToggle = document.getElementById('chatToggle');
+        let isChatOpen = false;
+
+        chatToggle.addEventListener('click', () => {
+            if (!isChatOpen) {
+                const chatBox = document.createElement('div');
+                chatBox.className = 'fixed bottom-20 right-20 w-80 clay-card bg-white rounded-lg shadow-xl p-4 z-50';
+                chatBox.innerHTML = `
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-semibold">Customer Support</h3>
+                        <button id="closeChat" class="text-gray-500 hover:text-gray-700">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                    <div class="h-64 overflow-y-auto mb-4 p-2 bg-gray-50 rounded clay-input">
+                        <p class="text-sm text-gray-600 mb-2">Welcome to TechHub support! How can we help you today?</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="chatInput" placeholder="Type your message..." class="flex-1 p-2 clay-input rounded">
+                        <button id="sendChat" class="clay-button bg-indigo-600 text-white px-4 py-2 rounded">Send</button>
+                    </div>
+                `;
+                document.body.appendChild(chatBox);
+
+                document.getElementById('closeChat').addEventListener('click', () => {
+                    chatBox.remove();
+                    isChatOpen = false;
+                });
+
+                // Simple chat functionality
+                const chatInput = document.getElementById('chatInput');
+                const sendChat = document.getElementById('sendChat');
+                const chatMessages = document.querySelector('.overflow-y-auto');
+
+                sendChat.addEventListener('click', () => {
+                    if (chatInput.value.trim() !== '') {
+                        // Add user message
+                        const userMessage = document.createElement('p');
+                        userMessage.className = 'text-sm text-right mb-2';
+                        userMessage.innerHTML = `<span class="bg-indigo-600 text-white py-1 px-2 rounded-lg inline-block">${chatInput.value}</span>`;
+                        chatMessages.appendChild(userMessage);
+
+                        // Simulate response after short delay
+                        setTimeout(() => {
+                            const botMessage = document.createElement('p');
+                            botMessage.className = 'text-sm text-gray-600 mb-2';
+                            botMessage.textContent = "Thanks for your message! Our team will get back to you shortly.";
+                            chatMessages.appendChild(botMessage);
+                            
+                            // Scroll to bottom
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                        }, 1000);
+
+                        // Clear input and scroll to bottom
+                        chatInput.value = '';
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+                });
+
+                // Allow sending with Enter key
+                chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        sendChat.click();
+                    }
+                });
+
+                isChatOpen = true;
+            }
+        });
+
+        // Form submission
+        document.getElementById('repairForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Thank you! Your repair request has been submitted. Our team will contact you shortly to confirm your appointment.');
+        });
+
+        // Close modals when clicking outside
+        window.addEventListener('click', (e) => {
+            if (e.target === cartModal) {
+                cartModal.classList.remove('active');
+            }
+            if (e.target === productModal) {
+                productModal.classList.remove('active');
+            }
+            if (e.target === shopModal) {
+                shopModal.classList.remove('active');
+            }
+            if (e.target === checkoutModal) {
+                checkoutModal.classList.remove('active');
+            }
+            if (e.target === receiptModal) {
+                receiptModal.classList.remove('active');
+            }
+        });
+
+        // Mobile Navigation
+        const mobileNav = document.createElement('div');
+        mobileNav.className = 'md:hidden fixed bottom-0 left-0 right-0 bg-white shadow-lg z-40';
+        mobileNav.innerHTML = `
+            <div class="flex justify-around py-3">
+                <a href="#home" class="text-center"><i class="bi bi-house text-xl"></i></a>
+                <a href="#products" class="text-center"><i class="bi bi-grid text-xl"></i></a>
+                <a href="#services" class="text-center"><i class="bi bi-tools text-xl"></i></a>
+                <a href="#contact" class="text-center"><i class="bi bi-envelope text-xl"></i></a>
+            </div>
+        `;
+        document.body.appendChild(mobileNav);
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
